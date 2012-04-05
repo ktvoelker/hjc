@@ -3,16 +3,16 @@ module Output where
 
 import Ast
 
+nativesFile = "natives.js"
+
 writeModules :: FilePath -> [Module] -> IO ()
-writeModules name = writeFile name . show
+writeModules name ms = readFile nativesFile >>= writeFile name . flip showModules ms
 
 modulesRootId = "M"
 mainName = GlobalName "Main" "main"
 
-natives = ""
-
-makeProgram :: [Module] -> Expr
-makeProgram ms = Call (Func [] $ ss ++ rs) []
+makeProgram :: String -> [Module] -> Expr
+makeProgram natives ms = Call (Func [] $ ss ++ rs) []
   where
     ss =
         Var modulesRootId (Object [])
@@ -27,9 +27,8 @@ makeModuleBinding :: Id -> Binding -> Stmt
 makeModuleBinding modName (bindName, expr) =
   Assign (Use $ GlobalName modName bindName) expr
 
-instance Show Module where
-  showsPrec _ _ = undefined
-  showList = shows . makeProgram
+showModules :: String -> [Module] -> String
+showModules natives = show . makeProgram natives
 
 instance Show Name where
   showsPrec _ (GlobalName modName bindName) =
