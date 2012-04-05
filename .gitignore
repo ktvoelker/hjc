@@ -2,3 +2,5 @@
 *.hi
 *.o
 hjc
+*.html
+dist
