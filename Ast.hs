@@ -29,11 +29,13 @@ data Expr =
 data LitVal =
     LitNum Double
   | LitStr String
+  | LitNull
+  | LitUndef
 
 data Stmt =
     Return Expr
-  | Var Id Expr
   | Assign Expr Expr
   | Exec Expr
   | Native String
+  | Var Id Expr
 

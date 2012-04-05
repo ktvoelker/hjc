@@ -3,4 +3,5 @@
 *.o
 hjc
 *.html
+*.js
 dist

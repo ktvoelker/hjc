@@ -12,12 +12,16 @@ mainName = GlobalName "Main" "main"
 natives = ""
 
 makeProgram :: [Module] -> Expr
-makeProgram ms = Call (Func [] $ ss ++ [Return $ Call (Use mainName) []]) []
+makeProgram ms = Call (Func [] $ ss ++ rs) []
   where
     ss =
-        (Var modulesRootId $ Object [])
+        Var modulesRootId (Object [])
       : Native natives
       : concatMap (\m -> map (makeModuleBinding $ m_name m) $ m_bindings m) ms
+    rs =
+      [ Exec (Call (Use mainName) [])
+      , Return $ Literal LitUndef
+      ]
 
 makeModuleBinding :: Id -> Binding -> Stmt
 makeModuleBinding modName (bindName, expr) =
@@ -42,7 +46,8 @@ instance Show Name where
 instance Show Expr where
   showsPrec p (Func ps ss) =
       ("function(" ++)
-    . showsWithCommas p ps
+      -- TODO fix the un-perfect badness
+    . showsWithCommas p (map ("_" ++) ps)
     . ("){" ++)
     . showsWithSemis p ss
     . ("}" ++)
@@ -81,6 +86,8 @@ instance Show Pair where
 instance Show LitVal where
   showsPrec p (LitNum d) = showsPrec p d
   showsPrec p (LitStr xs) = showsPrec p xs
+  showsPrec _ LitNull = ("null" ++)
+  showsPrec _ LitUndef = ("undefined" ++)
 
 showsWithCommas _ [] = id
 showsWithCommas p (x : xs) =
@@ -97,7 +104,9 @@ instance Show Stmt where
     . showsPrec p e
   showsPrec p (Var id e) =
       ("var " ++)
-    . showsPrec p (Assign (Use $ LocalName id) e)
+    . (id ++)
+    . ("=" ++)
+    . showsPrec p e
   showsPrec p (Assign lhs rhs) =
       showsPrec p lhs
     . ("=" ++)
