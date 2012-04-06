@@ -2,7 +2,7 @@
 TODO
 ====
 
-Figure out what happens when data constructors are compiled
+Compile data constructors
 
 Implement the native functions F and S
 
