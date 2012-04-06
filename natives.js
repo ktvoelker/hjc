@@ -1,4 +1,5 @@
 var T = 42;
+var I = function(x) { return x; }
 var E = function(msg) {
   throw new Exception(msg);
 };

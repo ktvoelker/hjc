@@ -7,7 +7,6 @@ import qualified HscTypes as Hsc
 import qualified Literal as HsLit
 import qualified Module as HsMod
 import qualified Name as HsName
-import qualified Unique as HsU
 import qualified Var as HsVar
 
 import Ast
@@ -68,8 +67,7 @@ compileAlts id =
 testAlt :: Id -> Hs.AltCon -> Expr
 testAlt _ Hs.DEFAULT = ENative "true"
 testAlt id (Hs.DataAlt dataCon) =
-  StrictEq (Index (Use $ LocalName id) (Literal $ LitStr "co"))
-    $ Literal $ LitNum $ fromIntegral $ HsU.getKey $ HsU.getUnique dataCon
+  StrictEq (Index (Use $ LocalName id) (Literal $ LitStr "co")) $ unique dataCon
 testAlt id (Hs.LitAlt lit) = case lit of
   HsLit.MachChar c ->
     StrictEq (Use $ LocalName id) $ Literal $ LitChar c

@@ -22,10 +22,12 @@ compileTyCon tc | HsTc.isAlgTyCon tc = case HsTc.algTyConRhs tc of
   HsTc.DataTyCon { HsTc.data_cons = ds } -> concatMap compileDataCon ds
 
 compileNewDataCon :: HsDc.DataCon -> [Binding]
-compileNewDataCon _ = undefined
--- TODO produce the identity function for the constructor and any accessor
+compileNewDataCon dc =
+    (HsName.getOccString $ HsDc.dataConName dc, ENative "I")
+  : map (\name -> (HsName.getOccString name, ENative "I")) (HsDc.dataConFieldLabels dc)
 
 compileDataCon :: HsDc.DataCon -> [Binding]
-compileDataCon = undefined
--- TODO produce implementations of the constructor and any accessors
+compileDataCon dc =
+    (HsName.getOccString $ HsDc.dataConName dc, Call (ENative "C") [unique dc])
+  : []
 
