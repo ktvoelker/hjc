@@ -4,8 +4,6 @@ TODO
 
 Compile data constructors
 
-Support casts in the compiler
-
 Implement the native functions F and S
 
 Start adding native libraries

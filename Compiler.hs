@@ -51,6 +51,8 @@ compileExpr e = case e of
       [Return $ compileExpr e]) (map compileExpr bVals)
   Hs.Case scru name _ alts -> compileCase scru name alts
   Hs.Type _ -> ENative "T"
+  Hs.Cast e _ -> compileExpr e
+  _ -> undefined
 
 compileCase :: Hs.Expr Hs.CoreBndr -> Hs.CoreBndr -> [Hs.Alt Hs.CoreBndr] -> Expr
 compileCase scru name alts =
