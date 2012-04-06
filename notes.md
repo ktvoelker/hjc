@@ -18,7 +18,8 @@ Double               Number
 Algebraic value      {co: CTOR, xs: [VALUE, ...]}
 Function             Function
 Type                 null
-IO monad value       {io: Function}
+IO monad value       {io: true, fn: Function}
+IO monad done        {io: false}
 
 VALUE is any value.
 
