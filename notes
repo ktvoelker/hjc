@@ -16,7 +16,7 @@ Int                  Number
 Double               Number
 Algebraic value      {co: CTOR, xs: [VALUE, ...]}
 Function             Function
-Type                 {ty: true}
+Type                 null
 
 VALUE is any value.
 

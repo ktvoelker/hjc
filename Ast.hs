@@ -27,14 +27,10 @@ data Expr =
   | Object [(Id, Expr)]
   | StrictEq Expr Expr
   | If Expr Expr Expr
-  | Force Expr
-  | Error String
-  | Type
   | ENative String
 
 data LitVal =
-    LitBool Bool
-  | LitChar Char
+    LitChar Char
   | LitNum Double
   | LitStr String
   | LitNull

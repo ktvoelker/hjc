@@ -9,11 +9,6 @@ writeModules :: FilePath -> [Module] -> IO ()
 writeModules name ms = readFile nativesFile >>= writeFile name . flip showModules ms
 
 modulesRootId = "M"
-forceFuncId = "F"
-errorFuncId = "E"
-mkStrFuncId = "S"
-falseId = "Bf"
-trueId = "Bt"
 mainName = GlobalName "Main" "main"
 
 makeProgram :: String -> [Module] -> Expr
@@ -91,23 +86,10 @@ instance Show Expr where
     . (") : (" ++)
     . (showsPrec p f)
     . (")" ++)
-  showsPrec p (Force e) =
-      ("(" ++)
-    . (forceFuncId ++)
-    . ("(" ++)
-    . (showsPrec p e)
-    . ("))" ++)
-  showsPrec p (Error xs) =
-      ("(" ++)
-    . (errorFuncId ++)
-    . ("(" ++)
-    . (showsPrec p xs)
-    . ("))" ++)
   showsPrec p (ENative xs) =
       ("(" ++)
     . (xs ++)
     . (")" ++)
-  showsPrec _ Type = ("{ty: true}" ++)
 
 data Pair = Pair Id Expr
 
@@ -119,16 +101,9 @@ instance Show Pair where
     . showsPrec p e
 
 instance Show LitVal where
-  showsPrec _ (LitBool False) = (falseId ++)
-  showsPrec _ (LitBool True) = (trueId ++)
   showsPrec p (LitChar c) = showsPrec p c
   showsPrec p (LitNum d) = showsPrec p d
-  showsPrec p (LitStr xs) =
-      ("(" ++)
-    . (mkStrFuncId ++)
-    . ("(" ++)
-    . showsPrec p xs
-    . ("))" ++)
+  showsPrec p (LitStr xs) = showsPrec p xs
   showsPrec _ LitNull = ("null" ++)
   showsPrec _ LitUndef = ("undefined" ++)
 

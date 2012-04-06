@@ -39,9 +39,9 @@ compileExpr e = case e of
   Hs.Var name -> Use $ case hsName name of
     (Nothing, name) -> LocalName name
     (Just modName, name) -> GlobalName modName name
+  Hs.Lit (HsLit.MachStr xs) -> Call (ENative "S") [Literal $ LitStr $ HsFs.unpackFS xs]
   Hs.Lit lit -> Literal $ case lit of
     HsLit.MachChar c -> LitChar c
-    HsLit.MachStr xs -> LitStr $ HsFs.unpackFS xs
     HsLit.MachNullAddr -> undefined
     HsLit.MachInt n -> LitNum $ fromIntegral n
     HsLit.MachInt64 n -> LitNum $ fromIntegral n
@@ -57,20 +57,21 @@ compileExpr e = case e of
     Call (Func (map (snd . hsName) bNames)
       [Return $ compileExpr e]) (map compileExpr bVals)
   Hs.Case scru name _ alts -> compileCase scru name alts
-  Hs.Type _ -> Type
+  Hs.Type _ -> ENative "T"
 
 compileCase :: Hs.Expr Hs.CoreBndr -> Hs.CoreBndr -> [Hs.Alt Hs.CoreBndr] -> Expr
 compileCase scru name alts =
   let id = snd $ hsName name in
-  Call (Func [id] [Return $ compileAlts id alts]) [Force $ compileExpr scru]
+  Call (Func [id] [Return $ compileAlts id alts])
+    [Call (ENative "F") [compileExpr scru]]
 
 compileAlts :: Id -> [Hs.Alt Hs.CoreBndr] -> Expr
 compileAlts id =
   foldr (\alt@(con, _, _) -> If (testAlt id con) (chooseAlt id alt))
-    (Error "inexhaustive alternatives")
+    (Call (ENative "E") [Literal $ LitStr "inexhaustive alternatives"])
 
 testAlt :: Id -> Hs.AltCon -> Expr
-testAlt _ Hs.DEFAULT = Literal $ LitBool True
+testAlt _ Hs.DEFAULT = ENative "true"
 testAlt id (Hs.DataAlt dataCon) =
   StrictEq (Index (Use $ LocalName id) (Literal $ LitStr "co"))
     $ Literal $ LitNum $ fromIntegral $ HsU.getKey $ HsU.getUnique dataCon
