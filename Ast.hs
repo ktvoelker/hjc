@@ -25,10 +25,16 @@ data Expr =
   | Literal LitVal
   | Array [Expr]
   | Object [(Id, Expr)]
+  | StrictEq Expr Expr
+  | If Expr Expr Expr
+  | Force Expr
+  | Error String
   | Type
+  | ENative String
 
 data LitVal =
-    LitChar Char
+    LitBool Bool
+  | LitChar Char
   | LitNum Double
   | LitStr String
   | LitNull
@@ -38,6 +44,6 @@ data Stmt =
     Return Expr
   | Assign Expr Expr
   | Exec Expr
-  | Native String
+  | SNative String
   | Var Id Expr
 

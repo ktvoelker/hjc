@@ -9,6 +9,11 @@ writeModules :: FilePath -> [Module] -> IO ()
 writeModules name ms = readFile nativesFile >>= writeFile name . flip showModules ms
 
 modulesRootId = "M"
+forceFuncId = "F"
+errorFuncId = "E"
+mkStrFuncId = "S"
+falseId = "Bf"
+trueId = "Bt"
 mainName = GlobalName "Main" "main"
 
 makeProgram :: String -> [Module] -> Expr
@@ -16,7 +21,7 @@ makeProgram natives ms = Call (Func [] $ ss ++ rs) []
   where
     ss =
         Var modulesRootId (Object [])
-      : Native natives
+      : SNative natives
       : concatMap (\m -> map (makeModuleBinding $ m_name m) $ m_bindings m) ms
     rs =
       [ Exec (Call (Use mainName) [])
@@ -72,6 +77,36 @@ instance Show Expr where
       ("{" ++)
     . showsWithCommas p (map (uncurry Pair) es)
     . ("}" ++)
+  showsPrec p (StrictEq a b) =
+      ("((" ++)
+    . (showsPrec p a)
+    . (") === (" ++)
+    . (showsPrec p b)
+    . ("))" ++)
+  showsPrec p (If c t f) =
+      ("((" ++)
+    . (showsPrec p c)
+    . (") ? (" ++)
+    . (showsPrec p t)
+    . (") : (" ++)
+    . (showsPrec p f)
+    . (")" ++)
+  showsPrec p (Force e) =
+      ("(" ++)
+    . (forceFuncId ++)
+    . ("(" ++)
+    . (showsPrec p e)
+    . ("))" ++)
+  showsPrec p (Error xs) =
+      ("(" ++)
+    . (errorFuncId ++)
+    . ("(" ++)
+    . (showsPrec p xs)
+    . ("))" ++)
+  showsPrec p (ENative xs) =
+      ("(" ++)
+    . (xs ++)
+    . (")" ++)
   showsPrec _ Type = ("{ty: true}" ++)
 
 data Pair = Pair Id Expr
@@ -84,9 +119,16 @@ instance Show Pair where
     . showsPrec p e
 
 instance Show LitVal where
+  showsPrec _ (LitBool False) = (falseId ++)
+  showsPrec _ (LitBool True) = (trueId ++)
   showsPrec p (LitChar c) = showsPrec p c
   showsPrec p (LitNum d) = showsPrec p d
-  showsPrec p (LitStr xs) = showsPrec p xs
+  showsPrec p (LitStr xs) =
+      ("(" ++)
+    . (mkStrFuncId ++)
+    . ("(" ++)
+    . showsPrec p xs
+    . ("))" ++)
   showsPrec _ LitNull = ("null" ++)
   showsPrec _ LitUndef = ("undefined" ++)
 
@@ -113,5 +155,5 @@ instance Show Stmt where
     . ("=" ++)
     . showsPrec p rhs
   showsPrec p (Exec e) = showsPrec p e
-  showsPrec p (Native xs) = (xs ++)
+  showsPrec p (SNative xs) = (xs ++)
 

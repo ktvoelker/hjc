@@ -7,6 +7,7 @@ import qualified HscTypes as Hsc
 import qualified Literal as HsLit
 import qualified Module as HsMod
 import qualified Name as HsName
+import qualified Unique as HsU
 import qualified Var as HsVar
 
 import Ast
@@ -55,8 +56,59 @@ compileExpr e = case e of
   Hs.Let bs e -> let (bNames, bVals) = unzip $ flattenBinding bs in
     Call (Func (map (snd . hsName) bNames)
       [Return $ compileExpr e]) (map compileExpr bVals)
-  Hs.Case scru id ty alts -> compileCase scru id ty alts
+  Hs.Case scru name _ alts -> compileCase scru name alts
   Hs.Type _ -> Type
 
-compileCase scru id ty alts = undefined
+compileCase :: Hs.Expr Hs.CoreBndr -> Hs.CoreBndr -> [Hs.Alt Hs.CoreBndr] -> Expr
+compileCase scru name alts =
+  let id = snd $ hsName name in
+  Call (Func [id] [Return $ compileAlts id alts]) [Force $ compileExpr scru]
+
+compileAlts :: Id -> [Hs.Alt Hs.CoreBndr] -> Expr
+compileAlts id =
+  foldr (\alt@(con, _, _) -> If (testAlt id con) (chooseAlt id alt))
+    (Error "inexhaustive alternatives")
+
+testAlt :: Id -> Hs.AltCon -> Expr
+testAlt _ Hs.DEFAULT = Literal $ LitBool True
+testAlt id (Hs.DataAlt dataCon) =
+  StrictEq (Index (Use $ LocalName id) (Literal $ LitStr "co"))
+    $ Literal $ LitNum $ fromIntegral $ HsU.getKey $ HsU.getUnique dataCon
+testAlt id (Hs.LitAlt lit) = case lit of
+  HsLit.MachChar c ->
+    StrictEq (Use $ LocalName id) $ Literal $ LitChar c
+  HsLit.MachStr xs ->
+    undefined
+  HsLit.MachNullAddr ->
+    undefined
+  HsLit.MachInt n ->
+    StrictEq (Use $ LocalName id) $ Literal $ LitNum $ fromIntegral n
+  HsLit.MachInt64 n ->
+    StrictEq (Use $ LocalName id) $ Literal $ LitNum $ fromIntegral n
+  HsLit.MachWord n ->
+    StrictEq (Use $ LocalName id) $ Literal $ LitNum $ fromIntegral n
+  HsLit.MachWord64 n ->
+    StrictEq (Use $ LocalName id) $ Literal $ LitNum $ fromIntegral n
+  HsLit.MachFloat n ->
+    StrictEq (Use $ LocalName id) $ Literal $ LitNum $ fromRational n
+  HsLit.MachDouble n ->
+    StrictEq (Use $ LocalName id) $ Literal $ LitNum $ fromRational n
+  HsLit.MachLabel _ _ _ ->
+    undefined
+  HsLit.LitInteger _ _ ->
+    undefined
+
+chooseAlt :: Id -> Hs.Alt Hs.CoreBndr -> Expr
+chooseAlt _ (_, [], e) = compileExpr e
+chooseAlt _ (Hs.DEFAULT, _, _) = undefined
+chooseAlt _ (Hs.LitAlt _, _, _) = undefined
+chooseAlt id (Hs.DataAlt dataCon, bs, e) =
+  -- TODO: we could use JS apply directly on the internal array of the algebraic value
+  Call (Func (map (snd . hsName) bs) [Return $ compileExpr e])
+    $ map (extractAlgIndex id) [0 .. length bs - 1]
+
+extractAlgIndex :: Id -> Int -> Expr
+extractAlgIndex id =
+  Index (Index (Use $ LocalName id) (Literal $ LitStr "xs"))
+    . Literal . LitNum . fromIntegral
 
