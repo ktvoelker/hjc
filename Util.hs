@@ -20,5 +20,5 @@ hsName bndr =
     name = HsVar.varName bndr
 
 unique :: HsU.Uniquable u => u -> Expr
-unique = Literal . LitNum . fromIntegral . HsU.getKey . HsU.getUnique
+unique = Literal . LitInteger . toInteger . HsU.getKey . HsU.getUnique
 

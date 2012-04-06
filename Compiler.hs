@@ -35,12 +35,12 @@ compileExpr e = case e of
   Hs.Lit lit -> Literal $ case lit of
     HsLit.MachChar c -> LitChar c
     HsLit.MachNullAddr -> undefined
-    HsLit.MachInt n -> LitNum $ fromIntegral n
-    HsLit.MachInt64 n -> LitNum $ fromIntegral n
-    HsLit.MachWord n -> LitNum $ fromIntegral n
-    HsLit.MachWord64 n -> LitNum $ fromIntegral n
-    HsLit.MachFloat n -> LitNum $ fromRational n
-    HsLit.MachDouble n -> LitNum $ fromRational n
+    HsLit.MachInt n -> LitInteger n
+    HsLit.MachInt64 n -> LitInteger n
+    HsLit.MachWord n -> LitInteger n
+    HsLit.MachWord64 n -> LitInteger n
+    HsLit.MachFloat n -> LitDouble $ fromRational n
+    HsLit.MachDouble n -> LitDouble $ fromRational n
     HsLit.MachLabel _ _ _ -> undefined
     HsLit.LitInteger _ _ -> undefined
   Hs.App e a -> Object [("ap", compileExpr e), ("ar", compileExpr a)]
@@ -76,17 +76,17 @@ testAlt id (Hs.LitAlt lit) = case lit of
   HsLit.MachNullAddr ->
     undefined
   HsLit.MachInt n ->
-    StrictEq (Use $ LocalName id) $ Literal $ LitNum $ fromIntegral n
+    StrictEq (Use $ LocalName id) $ Literal $ LitInteger n
   HsLit.MachInt64 n ->
-    StrictEq (Use $ LocalName id) $ Literal $ LitNum $ fromIntegral n
+    StrictEq (Use $ LocalName id) $ Literal $ LitInteger n
   HsLit.MachWord n ->
-    StrictEq (Use $ LocalName id) $ Literal $ LitNum $ fromIntegral n
+    StrictEq (Use $ LocalName id) $ Literal $ LitInteger n
   HsLit.MachWord64 n ->
-    StrictEq (Use $ LocalName id) $ Literal $ LitNum $ fromIntegral n
+    StrictEq (Use $ LocalName id) $ Literal $ LitInteger n
   HsLit.MachFloat n ->
-    StrictEq (Use $ LocalName id) $ Literal $ LitNum $ fromRational n
+    StrictEq (Use $ LocalName id) $ Literal $ LitDouble $ fromRational n
   HsLit.MachDouble n ->
-    StrictEq (Use $ LocalName id) $ Literal $ LitNum $ fromRational n
+    StrictEq (Use $ LocalName id) $ Literal $ LitDouble $ fromRational n
   HsLit.MachLabel _ _ _ ->
     undefined
   HsLit.LitInteger _ _ ->
@@ -104,5 +104,5 @@ chooseAlt id (Hs.DataAlt dataCon, bs, e) =
 extractAlgIndex :: Id -> Int -> Expr
 extractAlgIndex id =
   Index (Index (Use $ LocalName id) (Literal $ LitStr "xs"))
-    . Literal . LitNum . fromIntegral
+  . Literal . LitInteger . toInteger
 

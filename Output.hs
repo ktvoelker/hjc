@@ -102,7 +102,8 @@ instance Show Pair where
 
 instance Show LitVal where
   showsPrec p (LitChar c) = showsPrec p c
-  showsPrec p (LitNum d) = showsPrec p d
+  showsPrec p (LitInteger n) = showsPrec p n
+  showsPrec p (LitDouble d) = showsPrec p d
   showsPrec p (LitStr xs) = showsPrec p xs
   showsPrec _ LitNull = ("null" ++)
   showsPrec _ LitUndef = ("undefined" ++)

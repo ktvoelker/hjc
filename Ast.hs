@@ -31,7 +31,8 @@ data Expr =
 
 data LitVal =
     LitChar Char
-  | LitNum Double
+  | LitInteger Integer
+  | LitDouble Double
   | LitStr String
   | LitNull
   | LitUndef
