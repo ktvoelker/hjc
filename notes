@@ -17,6 +17,7 @@ Double               {pr: Number} or Number
 Bool                 Boolean
 Algebraic value      {co: CTOR, xs: [VALUE, ...]}
 Function             Function
+Type                 {ty: true}
 
 VALUE is any value.
 

@@ -72,6 +72,7 @@ instance Show Expr where
       ("{" ++)
     . showsWithCommas p (map (uncurry Pair) es)
     . ("}" ++)
+  showsPrec _ Type = ("{ty: true}" ++)
 
 data Pair = Pair Id Expr
 
@@ -83,6 +84,7 @@ instance Show Pair where
     . showsPrec p e
 
 instance Show LitVal where
+  showsPrec p (LitChar c) = showsPrec p c
   showsPrec p (LitNum d) = showsPrec p d
   showsPrec p (LitStr xs) = showsPrec p xs
   showsPrec _ LitNull = ("null" ++)

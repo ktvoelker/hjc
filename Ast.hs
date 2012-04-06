@@ -25,9 +25,11 @@ data Expr =
   | Literal LitVal
   | Array [Expr]
   | Object [(Id, Expr)]
+  | Type
 
 data LitVal =
-    LitNum Double
+    LitChar Char
+  | LitNum Double
   | LitStr String
   | LitNull
   | LitUndef
