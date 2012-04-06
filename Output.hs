@@ -19,7 +19,7 @@ makeProgram natives ms = Call (Func [] $ ss ++ rs) []
       : SNative natives
       : concatMap (\m -> map (makeModuleBinding $ m_name m) $ m_bindings m) ms
     rs =
-      [ Exec (Call (Use mainName) [])
+      [ Exec (Call (ENative "F") [Call (Use mainName) []])
       , Return $ Literal LitUndef
       ]
 

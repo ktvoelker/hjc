@@ -51,7 +51,7 @@ compileExpr e = case e of
     HsLit.MachDouble n -> LitNum $ fromRational n
     HsLit.MachLabel _ _ _ -> undefined
     HsLit.LitInteger _ _ -> undefined
-  Hs.App e a -> Call (compileExpr e) [compileExpr a]
+  Hs.App e a -> Object [("ap", compileExpr e), ("ar", compileExpr a)]
   Hs.Lam id e -> Func [snd $ hsName id] [Return $ compileExpr e]
   Hs.Let bs e -> let (bNames, bVals) = unzip $ flattenBinding bs in
     Call (Func (map (snd . hsName) bNames)

@@ -11,12 +11,13 @@ From the Haskell 98 Report, section 6.4:
 
 Haskell value        JavaScript value
 =============        ================
-Unforced application {ap: Function, xs: [VALUE, ...]}
+Unforced application {ap: Function, ar: VALUE}
 Int                  Number
 Double               Number
 Algebraic value      {co: CTOR, xs: [VALUE, ...]}
 Function             Function
 Type                 null
+IO monad value       {io: Function}
 
 VALUE is any value.
 
