@@ -1,5 +1,5 @@
 
-module Compiler where
+module Compiler (compileModule) where
 
 import qualified CoreSyn as Hs
 import qualified FastString as HsFs
@@ -11,25 +11,18 @@ import qualified Unique as HsU
 import qualified Var as HsVar
 
 import Ast
+import TyCons
+import Util
 
 compileModule :: Hsc.ModGuts -> Module
 compileModule mg =
   Module (hsModuleName $ Hsc.mg_module mg)
-  $ concatMap (map (uncurry compileBinding) . flattenBinding) $ Hsc.mg_binds mg
+  $ concatMap (map (uncurry compileBinding) . flattenBinding) (Hsc.mg_binds mg)
+    ++ compileTyCons (Hsc.mg_tcs mg)
 
 flattenBinding :: Hs.CoreBind -> [(Hs.CoreBndr, Hs.Expr Hs.CoreBndr)]
 flattenBinding (Hs.NonRec b e) = [(b, e)]
 flattenBinding (Hs.Rec bs) = bs
-
-hsModuleName :: HsMod.Module -> String
-hsModuleName = HsMod.moduleNameString . HsMod.moduleName
-
-hsName :: Hs.CoreBndr -> (Maybe String, String)
-hsName bndr = 
-  ( fmap hsModuleName $ HsName.nameModule_maybe name
-  , HsName.occNameString $ HsName.nameOccName name)
-  where
-    name = HsVar.varName bndr
 
 compileBinding :: Hs.CoreBndr -> Hs.Expr Hs.CoreBndr -> Binding
 compileBinding bndr expr = (snd $ hsName bndr, compileExpr expr)
