@@ -2,7 +2,10 @@
 TODO
 ====
 
-Implement the native functions F and S
+Implement the native function S to support string literals
+
+  This is probably going to need some reworking, since natives.js doesn't
+  know the unique for the list constructor.
 
 Support field labels in data constructors
 

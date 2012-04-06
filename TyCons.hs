@@ -28,6 +28,12 @@ compileNewDataCon dc =
 
 compileDataCon :: HsDc.DataCon -> [Binding]
 compileDataCon dc =
-    (HsName.getOccString $ HsDc.dataConName dc, Call (ENative "C") [unique dc])
+    ( HsName.getOccString $ HsDc.dataConName dc
+    , Call (ENative "C")
+      [ unique dc
+      , Literal $ LitInteger $ toInteger $ length $ HsDc.dataConRepArgTys dc
+      , Array []
+      ]
+    )
   : []
-
+ 

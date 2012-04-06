@@ -12,6 +12,7 @@ From the Haskell 98 Report, section 6.4:
 Haskell value        JavaScript value
 =============        ================
 Unforced application {ap: Function, ar: VALUE}
+Forced application   {va: VALUE}
 Int                  Number
 Double               Number
 Algebraic value      {co: CTOR, xs: [VALUE, ...]}
