@@ -31,10 +31,10 @@ compileExpr e = case e of
   Hs.Var name -> Use $ case hsName name of
     (Nothing, name) -> LocalName name
     (Just modName, name) -> GlobalName modName name
-  Hs.Lit (HsLit.MachStr xs) -> Call (ENative "S") [Literal $ LitStr $ HsFs.unpackFS xs]
   Hs.Lit lit -> Literal $ case lit of
     HsLit.MachChar c -> LitChar c
     HsLit.MachNullAddr -> undefined
+    HsLit.MachStr xs -> LitStr $ HsFs.unpackFS xs
     HsLit.MachInt n -> LitInteger n
     HsLit.MachInt64 n -> LitInteger n
     HsLit.MachWord n -> LitInteger n

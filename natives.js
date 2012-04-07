@@ -19,9 +19,6 @@ var C = function(con, arity, args) {
   }
 };
 // S is for String
-var S = function(str) {
-  // TODO: convert str to an algebraic string
-};
 // F is for Force
 var F = function(x) {
   if (typeof(x) === 'object' && x.hasOwnProperty('ap')) {
@@ -35,8 +32,18 @@ var F = function(x) {
 // R is for Run
 var R = function(io) {
   var cur = io;
-  while (cur.io) {
-    cur = cur.fn.call(null);
+  var done = false;
+  while (!done) {
+    if (cur.hasOwnProperty('io')) {
+      cur = cur.fn.call(null);
+    } else if (cur.hasOwnProperty('ap')) {
+      cur = F(cur);
+    } else {
+      // error: should be impossible
+    }
   }
 };
-
+M['GHC.CString'] = {};
+M['GHC.CString']['unpackCString#'] = function(str) {
+  // TODO
+};

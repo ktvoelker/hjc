@@ -2,11 +2,6 @@
 TODO
 ====
 
-Implement the native function S to support string literals
-
-  This is probably going to need some reworking, since natives.js doesn't
-  know the unique for the list constructor.
-
 Implement enough of IO so that a program can produce output
 
 Support field labels in data constructors
