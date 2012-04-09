@@ -9,22 +9,35 @@ import qualified Module as HsMod
 import qualified Name as HsName
 import qualified Var as HsVar
 
+import Data.List
+
 import Ast
 import TyCons
 import Util
 
-compileModule :: Hsc.ModGuts -> Module
-compileModule mg =
-  Module (hsModuleName $ Hsc.mg_module mg)
-  $ concatMap (map (uncurry compileBinding) . flattenBinding) (Hsc.mg_binds mg)
-    ++ compileTyCons (Hsc.mg_tcs mg)
+compileModule :: Maybe String -> Hsc.ModGuts -> Module
+compileModule maybeMain mg =
+  Module
+  { m_name     = name
+  , m_bindings = bindings
+  , m_main     = fmap b_lhs $ find b_main bindings
+  }
+  where
+    bindings = concatMap (map (uncurry $ compileBinding maybeMain) . flattenBinding)
+      (Hsc.mg_binds mg) ++ compileTyCons (Hsc.mg_tcs mg)
+    name = hsModuleName $ Hsc.mg_module mg
 
 flattenBinding :: Hs.CoreBind -> [(Hs.CoreBndr, Hs.Expr Hs.CoreBndr)]
 flattenBinding (Hs.NonRec b e) = [(b, e)]
 flattenBinding (Hs.Rec bs) = bs
 
-compileBinding :: Hs.CoreBndr -> Hs.Expr Hs.CoreBndr -> Binding
-compileBinding bndr expr = (snd $ hsName bndr, compileExpr expr)
+compileBinding :: Maybe String -> Hs.CoreBndr -> Hs.Expr Hs.CoreBndr -> Binding
+compileBinding maybeMain bndr expr = Binding (unique bndr) (compileExpr expr) isMain
+  where
+    isMain = case (maybeMain, hsName bndr) of
+      (Nothing, _) -> False
+      (Just _, (Nothing, _)) -> False
+      (Just main, (Just modName, varName)) -> main == modName ++ "." ++ varName
 
 compileExpr :: Hs.Expr Hs.CoreBndr -> Expr
 compileExpr e = case e of

@@ -1,31 +1,33 @@
 
 module Output where
 
+import Data.Maybe
+
 import Ast
 
-nativesFile = "natives.js"
+defaultNatives = "natives.js"
 
-writeModules :: FilePath -> [Module] -> IO ()
-writeModules name ms = readFile nativesFile >>= writeFile name . flip showModules ms
+writeModules :: Maybe FilePath -> FilePath -> [Module] -> IO ()
+writeModules maybeNatives name ms =
+  readFile (fromMaybe defaultNatives maybeNatives)
+  >>= writeFile name . flip showModules ms
 
 modulesRootId = "M"
-mainName = GlobalName "Main" "main"
 
 makeProgram :: String -> [Module] -> Expr
-makeProgram natives ms = Call (Func [] $ ss ++ rs) []
+makeProgram natives ms = Call (Func [] $ ss ++ mc ++ rt) []
   where
     ss =
         Var modulesRootId (Object [])
       : SNative natives
       : concatMap (\m -> map (makeModuleBinding $ m_name m) $ m_bindings m) ms
-    rs =
-      [ Exec (Call (ENative "R") [Call (Use mainName) []])
-      , Return $ Literal LitUndef
-      ]
+    mc = map (\main -> Exec (Call (ENative "R") [Call main []]))
+      $ take 1 $ catMaybes $ map m_main ms
+    rt = [Return $ Literal LitUndef]
 
 makeModuleBinding :: Id -> Binding -> Stmt
-makeModuleBinding modName (bindName, expr) =
-  Assign (Use $ GlobalName modName bindName) expr
+makeModuleBinding modName (Binding bindName expr _) =
+  Assign (Index (Index (ENative "M") (Literal $ LitStr modName)) bindName) expr
 
 showModules :: String -> [Module] -> String
 showModules natives = show . makeProgram natives

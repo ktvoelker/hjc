@@ -23,17 +23,18 @@ compileTyCon tc | HsTc.isAlgTyCon tc = case HsTc.algTyConRhs tc of
 
 compileNewDataCon :: HsDc.DataCon -> [Binding]
 compileNewDataCon dc =
-    (HsName.getOccString $ HsDc.dataConName dc, ENative "I")
-  : map (\name -> (HsName.getOccString name, ENative "I")) (HsDc.dataConFieldLabels dc)
+    Binding (unique dc) (ENative "I") False
+  : []
 
 compileDataCon :: HsDc.DataCon -> [Binding]
 compileDataCon dc =
-    ( HsName.getOccString $ HsDc.dataConName dc
-    , Call (ENative "C")
+  Binding
+    (unique dc)
+    (Call (ENative "C")
       [ unique dc
       , Literal $ LitInteger $ toInteger $ length $ HsDc.dataConRepArgTys dc
       , Array []
-      ]
-    )
+      ])
+    False
   : []
  
