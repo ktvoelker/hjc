@@ -1,14 +1,14 @@
 // T is for Type
 var T = 42;
 // I is for Identity
-var I = function(x) { return x; }
+var I = function(x) { return x; };
 // E is for Error
 var E = function(msg) {
   throw new Exception(msg);
 };
 // C is for Constructor
 var C = function(con, arity, args) {
-  if (arity == 0) {
+  if (arity === 0) {
     return {co: con, xs: args};
   } else {
     return function(arg) {
@@ -25,9 +25,8 @@ var F = function(x) {
       x.va = F(x.ap)(x.ar);
       delete x.ap;
       delete x.ar;
-  } else {
-    return x;
   }
+  return x;
 };
 // R is for Run
 var R = function(io) {

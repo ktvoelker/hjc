@@ -32,12 +32,17 @@ flattenBinding (Hs.NonRec b e) = [(b, e)]
 flattenBinding (Hs.Rec bs) = bs
 
 compileBinding :: Maybe String -> Hs.CoreBndr -> Hs.Expr Hs.CoreBndr -> Binding
-compileBinding maybeMain bndr expr = Binding (unique bndr) (compileExpr expr) isMain
+compileBinding maybeMain bndr expr = Binding lhs (compileExpr expr) isMain
   where
-    isMain = case (maybeMain, hsName bndr) of
+    (maybeModName, varName) = hsName bndr
+    u = unique bndr
+    lhs = case maybeModName of
+      Nothing -> u
+      Just modName -> Index (Index (ENative "M") (Literal $ LitStr modName)) u
+    isMain = case (maybeMain, maybeModName) of
       (Nothing, _) -> False
-      (Just _, (Nothing, _)) -> False
-      (Just main, (Just modName, varName)) -> main == modName ++ "." ++ varName
+      (Just _, Nothing) -> False
+      (Just main, Just modName) -> main == modName ++ "." ++ varName
 
 compileExpr :: Hs.Expr Hs.CoreBndr -> Expr
 compileExpr e = case e of

@@ -2,10 +2,6 @@
 TODO
 ====
 
-Fix the call to main: it is currently not qualified with a module name
-
-Make sure that a module's object is created before adding its bindings
-
 Implement enough of IO so that a program can produce output
 
 Support field labels in data constructors
