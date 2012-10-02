@@ -23,15 +23,16 @@ compileTyCon tc | HsTc.isAlgTyCon tc = case HsTc.algTyConRhs tc of
 
 compileNewDataCon :: HsDc.DataCon -> [Binding]
 compileNewDataCon dc =
-    Binding (unique dc) (ENative "I") False
+    Binding (compileName $ HsDc.dataConName dc) (ENative "I") False
   : []
 
 compileDataCon :: HsDc.DataCon -> [Binding]
 compileDataCon dc =
+  let name = compileName $ HsDc.dataConName dc in
   Binding
-    (unique dc)
+    name
     (Call (ENative "C")
-      [ unique dc
+      [ name
       , Literal $ LitInteger $ toInteger $ length $ HsDc.dataConRepArgTys dc
       , Array []
       ])

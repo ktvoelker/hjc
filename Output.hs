@@ -15,15 +15,14 @@ writeModules maybeNatives name ms =
 modulesRootId = "M"
 
 makeProgram :: String -> [Module] -> Expr
-makeProgram natives ms = Call (Func [] $ prel ++ mods ++ binds ++ main ++ ret) []
+makeProgram natives ms =
+  Call (Func [] $ prel ++ mods ++ nats ++ binds ++ main ++ ret) []
   where
-    prel = 
-      [ Var modulesRootId (Object [])
-      , SNative natives
-      ]
+    prel = [Var modulesRootId (Object [])]
     mods = map (makeModuleMap . m_name) ms
+    nats = [SNative natives]
     binds = concatMap (map makeAssignment . m_bindings) ms
-    main = map (\main -> Exec (Call (ENative "R") [Call main []]))
+    main = map (Exec . Call (ENative "R") . (: []))
       $ take 1 $ catMaybes $ map m_main ms
     ret = [Return $ Literal LitUndef]
 
@@ -35,18 +34,6 @@ makeAssignment (Binding lhs rhs _) = Assign lhs rhs
 
 showModules :: String -> [Module] -> String
 showModules natives mods = show (makeProgram natives mods) ++ ";\n"
-
-instance Show Name where
-  showsPrec _ (GlobalName modName bindName) =
-      (modulesRootId ++)
-    . ("['" ++)
-    . (modName ++)
-    . ("']['" ++)
-    . (bindName ++)
-    . ("']" ++)
-  showsPrec _ (LocalName name) =
-      ("_" ++)
-    . (name ++)
 
 instance Show Expr where
   showsPrec p (Func ps ss) =
@@ -62,7 +49,10 @@ instance Show Expr where
     . (")(" ++)
     . showsWithCommas p as
     . (")" ++)
-  showsPrec p (Use name) = showsPrec p name
+  showsPrec _ (Use id) =
+      ("(_" ++)
+    . (id ++)
+    . (")" ++)
   showsPrec p (Index x i) =
       ("(" ++)
     . showsPrec p x

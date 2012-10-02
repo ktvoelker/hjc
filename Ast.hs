@@ -19,14 +19,10 @@ type Id = String
 
 type Block = [Stmt]
 
-data Name =
-    GlobalName Id Id
-  | LocalName Id
-
 data Expr =
     Func [Id] Block
   | Call Expr [Expr]
-  | Use Name
+  | Use Id
   | Index Expr Expr
   | Literal LitVal
   | Array [Expr]

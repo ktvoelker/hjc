@@ -2,6 +2,7 @@
 module Compiler (compileModule) where
 
 import qualified CoreSyn as Hs
+import qualified DataCon as HsDc
 import qualified FastString as HsFs
 import qualified HscTypes as Hsc
 import qualified Literal as HsLit
@@ -32,13 +33,10 @@ flattenBinding (Hs.NonRec b e) = [(b, e)]
 flattenBinding (Hs.Rec bs) = bs
 
 compileBinding :: Maybe String -> Hs.CoreBndr -> Hs.Expr Hs.CoreBndr -> Binding
-compileBinding maybeMain bndr expr = Binding lhs (compileExpr expr) isMain
+compileBinding maybeMain bndr expr =
+  Binding (compileName bndr) (compileExpr expr) isMain
   where
     (maybeModName, varName) = hsName bndr
-    u = unique bndr
-    lhs = case maybeModName of
-      Nothing -> u
-      Just modName -> Index (Index (ENative "M") (Literal $ LitStr modName)) u
     isMain = case (maybeMain, maybeModName) of
       (Nothing, _) -> False
       (Just _, Nothing) -> False
@@ -46,9 +44,7 @@ compileBinding maybeMain bndr expr = Binding lhs (compileExpr expr) isMain
 
 compileExpr :: Hs.Expr Hs.CoreBndr -> Expr
 compileExpr e = case e of
-  Hs.Var name -> Use $ case hsName name of
-    (Nothing, name) -> LocalName name
-    (Just modName, name) -> GlobalName modName name
+  Hs.Var name -> compileName name
   Hs.Lit lit -> Literal $ case lit of
     HsLit.MachChar c -> LitChar c
     HsLit.MachNullAddr -> undefined
@@ -85,26 +81,27 @@ compileAlts id =
 testAlt :: Id -> Hs.AltCon -> Expr
 testAlt _ Hs.DEFAULT = ENative "true"
 testAlt id (Hs.DataAlt dataCon) =
-  StrictEq (Index (Use $ LocalName id) (Literal $ LitStr "co")) $ unique dataCon
+  StrictEq (Index (Use id) (Literal $ LitStr "co"))
+  $ compileName $ HsDc.dataConName dataCon
 testAlt id (Hs.LitAlt lit) = case lit of
   HsLit.MachChar c ->
-    StrictEq (Use $ LocalName id) $ Literal $ LitChar c
+    StrictEq (Use id) $ Literal $ LitChar c
   HsLit.MachStr xs ->
     undefined
   HsLit.MachNullAddr ->
     undefined
   HsLit.MachInt n ->
-    StrictEq (Use $ LocalName id) $ Literal $ LitInteger n
+    StrictEq (Use id) $ Literal $ LitInteger n
   HsLit.MachInt64 n ->
-    StrictEq (Use $ LocalName id) $ Literal $ LitInteger n
+    StrictEq (Use id) $ Literal $ LitInteger n
   HsLit.MachWord n ->
-    StrictEq (Use $ LocalName id) $ Literal $ LitInteger n
+    StrictEq (Use id) $ Literal $ LitInteger n
   HsLit.MachWord64 n ->
-    StrictEq (Use $ LocalName id) $ Literal $ LitInteger n
+    StrictEq (Use id) $ Literal $ LitInteger n
   HsLit.MachFloat n ->
-    StrictEq (Use $ LocalName id) $ Literal $ LitDouble $ fromRational n
+    StrictEq (Use id) $ Literal $ LitDouble $ fromRational n
   HsLit.MachDouble n ->
-    StrictEq (Use $ LocalName id) $ Literal $ LitDouble $ fromRational n
+    StrictEq (Use id) $ Literal $ LitDouble $ fromRational n
   HsLit.MachLabel _ _ _ ->
     undefined
   HsLit.LitInteger _ _ ->
@@ -121,6 +118,6 @@ chooseAlt id (Hs.DataAlt dataCon, bs, e) =
 
 extractAlgIndex :: Id -> Int -> Expr
 extractAlgIndex id =
-  Index (Index (Use $ LocalName id) (Literal $ LitStr "xs"))
+  Index (Index (Use id) (Literal $ LitStr "xs"))
   . Literal . LitInteger . toInteger
 
