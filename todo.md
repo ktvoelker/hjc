@@ -2,27 +2,20 @@
 TODO - Version 2
 ================
 
-Support field labels in data constructors
+Compile some libraries
 
-  Remember that the same field label can be used for multiple data constructors
-  under a type, even in different positions, but must produce a single binding.
+Add support for generating output from multiple modules
 
-Compile the basic libraries rather than writing them manually in JS, except IO
+  Don't require the output filenames to be specified
+
+Make a proper foreign interface to allow the needed functions to be written in JS
+
+  Make an IO library for accessing the DOM
 
 TODO - Version 3
 ================
 
-Generate one JS file per module
-
-  Also generate an HTML file per main program which includes all necessary JS
-
-  Run the main program on load
-
-  Include natives.js in the HTML
-
-Add lots of native libraries
-
-Add a check somewhere to make sure that Main.main exists and is the right type
+Support other exotic data constructors
 
 Make it possible to run the standard optimization passes
 

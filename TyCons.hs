@@ -8,6 +8,8 @@ import qualified TyCon as HsTc
 import qualified Unique as HsU
 import qualified Var as HsVar
 
+import Data.List
+
 import Ast
 import Util
 
@@ -23,12 +25,14 @@ compileTyCon tc | HsTc.isAlgTyCon tc = case HsTc.algTyConRhs tc of
 
 compileNewDataCon :: HsDc.DataCon -> [Binding]
 compileNewDataCon dc =
-    Binding (compileName $ HsDc.dataConName dc) (ENative "I") False
+    Binding (compileName $ HsDc.dataConName dc) (ENative "I")
   : []
+
+dcName = compileName . HsDc.dataConName
 
 compileDataCon :: HsDc.DataCon -> [Binding]
 compileDataCon dc =
-  let name = compileName $ HsDc.dataConName dc in
+  let name = dcName dc in
   Binding
     name
     (Call (ENative "C")
@@ -36,6 +40,5 @@ compileDataCon dc =
       , Literal $ LitInteger $ toInteger $ length $ HsDc.dataConRepArgTys dc
       , Array []
       ])
-    False
   : []
- 
+

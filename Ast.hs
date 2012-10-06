@@ -5,14 +5,12 @@ data Module =
   Module
   { m_name     :: Id
   , m_bindings :: [Binding]
-  , m_main     :: Maybe Expr
   }
 
 data Binding =
   Binding
   { b_lhs  :: Expr
   , b_rhs  :: Expr
-  , b_main :: Bool
   }
 
 type Id = String

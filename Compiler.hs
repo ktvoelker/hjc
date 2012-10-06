@@ -16,15 +16,14 @@ import Ast
 import TyCons
 import Util
 
-compileModule :: Maybe String -> Hsc.ModGuts -> Module
-compileModule maybeMain mg =
+compileModule :: Hsc.ModGuts -> Module
+compileModule mg =
   Module
   { m_name     = name
   , m_bindings = bindings
-  , m_main     = fmap b_lhs $ find b_main bindings
   }
   where
-    bindings = concatMap (map (uncurry $ compileBinding maybeMain) . flattenBinding)
+    bindings = concatMap (map (uncurry compileBinding) . flattenBinding)
       (Hsc.mg_binds mg) ++ compileTyCons (Hsc.mg_tcs mg)
     name = hsModuleName $ Hsc.mg_module mg
 
@@ -32,15 +31,8 @@ flattenBinding :: Hs.CoreBind -> [(Hs.CoreBndr, Hs.Expr Hs.CoreBndr)]
 flattenBinding (Hs.NonRec b e) = [(b, e)]
 flattenBinding (Hs.Rec bs) = bs
 
-compileBinding :: Maybe String -> Hs.CoreBndr -> Hs.Expr Hs.CoreBndr -> Binding
-compileBinding maybeMain bndr expr =
-  Binding (compileName bndr) (compileExpr expr) isMain
-  where
-    (maybeModName, varName) = hsName bndr
-    isMain = case (maybeMain, maybeModName) of
-      (Nothing, _) -> False
-      (Just _, Nothing) -> False
-      (Just main, Just modName) -> main == modName ++ "." ++ varName
+compileBinding :: Hs.CoreBndr -> Hs.Expr Hs.CoreBndr -> Binding
+compileBinding bndr expr = Binding (compileName bndr) (compileExpr expr)
 
 compileExpr :: Hs.Expr Hs.CoreBndr -> Expr
 compileExpr e = case e of

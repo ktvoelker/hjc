@@ -1,45 +1,42 @@
 
 module Output where
 
+import Data.List
 import Data.Maybe
 
 import Ast
 
-defaultNatives = "natives.js"
-
-writeModules :: Maybe FilePath -> FilePath -> [Module] -> IO ()
-writeModules maybeNatives name ms =
-  readFile (fromMaybe defaultNatives maybeNatives)
-  >>= writeFile name . flip showModules ms
+writeModules :: FilePath -> [Module] -> IO ()
+writeModules name = writeFile name . showModules
 
 modulesRootId = "M"
 
-makeProgram :: String -> [Module] -> Expr
-makeProgram natives ms =
-  Call (Func [] $ prel ++ mods ++ nats ++ binds ++ main ++ ret) []
+makeProgram :: [Module] -> Expr
+makeProgram ms =
+  Call (Func [] $ prel ++ mods ++ binds ++ ret) []
   where
-    prel = [Var modulesRootId (Object [])]
+    prel =
+      [ SNative "if (typeof(window.HASKELL) !== 'object') { window.HASKELL = {}; }"
+      , Var modulesRootId (ENative "window.HASKELL")
+      ]
     mods = map (makeModuleMap . m_name) ms
-    nats = [SNative natives]
     binds = concatMap (map makeAssignment . m_bindings) ms
-    main = map (Exec . Call (ENative "R") . (: []))
-      $ take 1 $ catMaybes $ map m_main ms
     ret = [Return $ Literal LitUndef]
 
 makeModuleMap :: String -> Stmt
 makeModuleMap = flip Assign (Object []) . Index (ENative "M") . Literal . LitStr
 
 makeAssignment :: Binding -> Stmt
-makeAssignment (Binding lhs rhs _) = Assign lhs rhs
+makeAssignment (Binding lhs rhs) = Assign lhs rhs
 
-showModules :: String -> [Module] -> String
-showModules natives mods = show (makeProgram natives mods) ++ ";\n"
+showModules :: [Module] -> String
+showModules mods = show (makeProgram mods) ++ ";\n"
 
 instance Show Expr where
   showsPrec p (Func ps ss) =
       ("function(" ++)
       -- TODO fix the un-perfect badness
-    . showsWithCommas p (map ("_" ++) ps)
+    . (intercalate "," ps ++)
     . ("){" ++)
     . showsWithSemis p ss
     . ("}" ++)
@@ -81,7 +78,7 @@ instance Show Expr where
     . (showsPrec p t)
     . (") : (" ++)
     . (showsPrec p f)
-    . (")" ++)
+    . ("))" ++)
   showsPrec p (ENative xs) =
       ("(" ++)
     . (xs ++)

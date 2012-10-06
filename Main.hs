@@ -23,8 +23,6 @@ data Option =
     Dump
   | Output
   | Input
-  | Natives
-  | MainFunc
   deriving (Bounded, Enum, Eq, Ord, Read, Show)
 
 type OptionWithArg = (Option, Maybe String)
@@ -39,8 +37,6 @@ options =
   [ GO.Option "d" ["dump"] (noArg Dump) "dump CoreSyn structure"
   , GO.Option "o" ["output"] (reqArg Output "FILE") "output"
   , GO.Option "i" ["input"] (reqArg Input "FILE") "input"
-  , GO.Option "n" ["natives"] (reqArg Natives "FILE") "natives"
-  , GO.Option "m" ["main"] (reqArg MainFunc "MODULE.NAME") "main function"
   ]
 
 optionArg o = join . lookup o
@@ -61,8 +57,8 @@ main = do
         case optionArg Output opts of
           Nothing -> return ()
           Just outputFile ->
-            writeModules (optionArg Natives opts) outputFile
-            $ map (compileModule $ optionArg MainFunc opts) mods
+            writeModules outputFile
+            $ map compileModule mods
     _ -> usage
  
 getModules :: String -> IO [ModGuts]

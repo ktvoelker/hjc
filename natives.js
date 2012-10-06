@@ -1,3 +1,5 @@
+if (typeof(window.HASKELL) !== 'object') { window.HASKELL = {}; }
+var M = window.HASKELL;
 var DEBUG = true;
 // T is for Type
 var T = 42;
@@ -46,6 +48,18 @@ var F = function(x) {
 // R is for Run
 var R = function(io) {
   F(io).fn.call(null);
+};
+// D is for fielD
+var D = function(val, fds) {
+  val = F(val);
+  if (typeof(val) === 'object' && val.hasOwnProperty('co')) {
+    for (var i in fds) {
+      if (val.co === fds[i].co) {
+        return val.xs[fds[i].ix];
+      }
+    }
+  }
+  E("undefined");
 };
 M['GHC.Base'] = {};
 M['GHC.Base']['>>='] = function(t) {
@@ -118,7 +132,17 @@ M['GHC.CString']['unpackCString#'] = function(str) {
   cur.xs = [];
   return ret;
 };
+M['GHC.Show'] = {};
+M['GHC.Show']['$fShowInt'] = {};
+M['GHC.Show']['$fShowInt']['show'] = function(x) {
+  return M['GHC.CString']['unpackCString#'](String(x.va));
+};
 M['System.IO'] = {};
+M['System.IO']['print'] = function(show) {
+  return function(x) {
+    return M['System.IO']['putStrLn'](show['show'](x));
+  };
+};
 M['System.IO']['putStrLn'] = function(xs) {
   return {io: true, fn: function() {
     var str = '';
@@ -135,3 +159,7 @@ M['GHC.TopHandler']['runMainIO'] = function() {
   E("impossible");
 };
 M[':Main'] = {};
+function main() {
+  // TODO be robust
+  R(M['Main']['main']);
+}
